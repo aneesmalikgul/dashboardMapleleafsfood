@@ -3,7 +3,7 @@ include 'layouts/session.php';
 include 'layouts/config.php';
 
 if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['doc_id'])) {
-    $report_id = $_GET['report_id'];
+    $report_id = $_GET['doc_id']; // Ensure this matches what you expect
 
     try {
         // Start transaction
@@ -20,6 +20,11 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['doc_id'])) {
         $stmtFetch->bind_result($file_path_1, $file_path_2);
         $stmtFetch->fetch();
         $stmtFetch->close();
+
+        // Check if the report exists
+        if (empty($file_path_1) && empty($file_path_2)) {
+            throw new Exception("No files found to delete.");
+        }
 
         // Prepare the SQL statement to delete the record
         $sqlDelete = "DELETE FROM reports WHERE id = ?";
@@ -38,11 +43,15 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['doc_id'])) {
         $conn->commit();
 
         // Delete the files if they exist
-        if ($file_path_1 && file_exists($file_path_1)) {
-            unlink($file_path_1);
+        if (!empty($file_path_1) && file_exists($file_path_1)) {
+            if (!unlink($file_path_1)) {
+                throw new Exception("Failed to delete file 1: " . $file_path_1);
+            }
         }
-        if ($file_path_2 && file_exists($file_path_2)) {
-            unlink($file_path_2);
+        if (!empty($file_path_2) && file_exists($file_path_2)) {
+            if (!unlink($file_path_2)) {
+                throw new Exception("Failed to delete file 2: " . $file_path_2);
+            }
         }
 
         // Set success message
@@ -58,9 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] == "GET" && isset($_GET['doc_id'])) {
         if (isset($stmtDelete)) {
             $stmtDelete->close();
         }
-        if (isset($conn)) {
-            $conn->close();
-        }
+        // if (isset($conn)) {
+        //     $conn->close();
+        // }
 
         // Redirect back to the reports page
         header("Location: upload-doc.php");

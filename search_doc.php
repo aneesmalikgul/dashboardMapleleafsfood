@@ -34,7 +34,7 @@ if (isset($_POST['cnic'])) {
             $reportData = $result->fetch_assoc();
         } else {
             // Report not found
-            throw new Exception("Report not found or CNIC does not match.");
+            throw new Exception("Document not found or CNIC/Passport# does not match.");
         }
 
         // Commit transaction
@@ -57,7 +57,7 @@ if (isset($_POST['cnic'])) {
             $result->close();
         }
         // Close database connection
-        $conn->close();
+        // $conn->close();
     }
 } else {
     // CNIC not provided

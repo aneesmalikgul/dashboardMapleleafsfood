@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
     <link rel="manifest" href="assets/images/site.webmanifest">
-    <title>Search Report | The National Way Medical Lab</title>
+    <title>Search Document | Maple Leafs Food</title>
 
     <!-- Include Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -44,17 +44,17 @@
 
         .btn-search {
             width: 100%;
-            background-color: #6f42c1;
-            border-color: #6f42c1;
+            background-color: #004AB5;
+            border-color: #004AB5;
         }
 
         .btn-search:hover {
-            background-color: #5a33a7;
-            border-color: #5a33a7;
+            background-color: #003a8f;
+            border-color: #003a8f;
         }
 
         .card-header {
-            background-color: #6f42c1;
+            background-color: #004AB5;
             color: #fff;
             text-align: center;
             border-bottom: none;
@@ -77,7 +77,7 @@
         .lab-name {
             font-size: 22px;
             font-weight: bold;
-            color: #6f42c1;
+            color: #004AB5;
             margin-bottom: 30px;
             text-align: center;
         }
@@ -95,9 +95,8 @@
             text-align: center;
         }
 
-        /* Apply same color as form header to table header */
         .table thead {
-            background-color: #6f42c1;
+            background-color: #004AB5;
             color: white;
         }
 
@@ -123,22 +122,22 @@
     <div class="container">
         <!-- Medical Lab Name -->
         <div class="lab-name">
-            <h2>The National Medical Lab</h2>
+            <h2>Maple Leafs Food</h2>
         </div>
         <!-- Instructions -->
-        <div class="instructions">Please enter your CNIC number without dashes to search for the report.</div>
+        <div class="instructions">Please enter your CNIC number OR Passport number without dashes to search for the document.</div>
         <!-- Search Card -->
         <div class="card">
             <!-- Card header -->
             <div class="card-header">
-                <h5 class="card-title">Search Report</h5>
+                <h5 class="card-title">Search Document</h5>
             </div>
             <!-- Card body with search form -->
             <div class="card-body">
                 <form id="searchForm">
                     <div class="form-group">
                         <div class="mb-3">
-                            <label class="form-label">CNIC #</label>
+                            <label class="form-label">CNIC # OR Passport #</label>
                             <input type="text" class="form-control" id="cnic" placeholder="Enter CNIC Number" required>
                             <span class="fs-13 text-muted">e.g "xxxxxxxxxxxxx"</span>
                         </div>
@@ -150,14 +149,14 @@
 
         <!-- Report Table -->
         <div id="reportTable" class="w-100" style="display: none;">
-            <h5 class="mt-4 text-center">Report Details</h5>
+            <h5 class="mt-4 text-center">Document Details</h5>
             <div class="table-responsive">
                 <table class="table table-bordered mt-2">
                     <thead>
                         <tr>
-                            <th>Report ID</th>
-                            <th>Patient Name</th>
-                            <th>Download</th>
+                            <th>Doc ID</th>
+                            <th>Person Name</th>
+                            <th>Download Files</th>
                         </tr>
                     </thead>
                     <tbody id="reportBody">
@@ -182,32 +181,33 @@
                 var cnic = $('#cnic').val();
                 $.ajax({
                     type: 'POST',
-                    url: 'search_report.php',
+                    url: 'search_doc.php',
                     data: {
                         cnic: cnic
                     },
                     success: function(response) {
                         // Parse JSON response
                         var reportData = JSON.parse(response);
+
                         // Check if report data contains error message
                         if ('error' in reportData) {
-                            // Show error message if present
                             $('#errorMessage').text(reportData.error);
                             $('#errorMessage').show();
-                            // Hide the report table
                             $('#reportTable').hide();
                         } else {
-                            // Build the HTML for report table
+                            // Build the HTML for report table with two download buttons
                             var tableHtml = '<tr>';
                             tableHtml += '<td>' + reportData.id + '</td>';
                             tableHtml += '<td>' + reportData.patient_name + '</td>';
-                            tableHtml += '<td><a href="' + reportData.file_path + '" class="btn btn-primary" download>Download</a></td>';
+                            tableHtml += '<td>';
+                            tableHtml += '<a href="' + reportData.file_path_1 + '" class="btn btn-primary m-1" download>Download File 1</a>';
+                            tableHtml += '<a href="' + reportData.file_path_2 + '" class="btn btn-primary m-1" download>Download File 2</a>';
+                            tableHtml += '</td>';
                             tableHtml += '</tr>';
+
                             // Append the HTML to report table body
                             $('#reportBody').html(tableHtml);
-                            // Show the report table
                             $('#reportTable').show();
-                            // Hide the error message if it was previously shown
                             $('#errorMessage').hide();
                         }
                     },

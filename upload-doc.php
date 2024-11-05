@@ -8,22 +8,22 @@ include 'layouts/functions.php';
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
     try {
         $conn->begin_transaction(); // Start transaction
+
         // Check if all form fields are set
-        if (isset($_POST['patient_name'], $_POST['cnic']) && !empty($_POST['patient_name']) && !empty($_POST['cnic']) && isset($_FILES['pdf_report'])) {
+        if (
+            isset($_POST['patient_name'], $_POST['cnic']) &&
+            !empty($_POST['patient_name']) && !empty($_POST['cnic']) &&
+            isset($_FILES['pdf_report_1'], $_FILES['pdf_report_2'])
+        ) {
+
             // Get form data
             $patient_name = mysqli_real_escape_string($conn, $_POST['patient_name']);
             $cnic = mysqli_real_escape_string($conn, $_POST['cnic']);
             $uploader_id = $_SESSION['user_id']; // Assuming you have a user ID for the uploader
 
-            // Check file size and type
-            $pdf_report = $_FILES['pdf_report'];
-            $maxSize = 5 * 1024 * 1024; // 5 MB
-            if ($pdf_report['size'] > $maxSize || $pdf_report['type'] !== 'application/pdf') {
-                throw new Exception("Invalid file. Please select a PDF file with a maximum size of 5MB.");
-            }
-
-            // Define upload directory
+            // Set upload directory and max file size
             $uploadDir = 'assets/upload/report/';
+            $maxSize = 5 * 1024 * 1024; // 5 MB
 
             // Ensure upload directory exists
             if (!file_exists($uploadDir)) {
@@ -32,24 +32,41 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                 }
             }
 
-            // Generate filename with CNIC of the patient
-            $fileName = $cnic . '_' . basename($pdf_report['name']);
-            $filePath = $uploadDir . $fileName;
+            // Initialize file paths
+            $filePath1 = null;
+            $filePath2 = null;
 
-            // Move the uploaded file to the upload directory
-            if (!move_uploaded_file($pdf_report['tmp_name'], $filePath)) {
-                throw new Exception("Failed to move uploaded file.");
+            // Process the first file upload
+            $pdf_report_1 = $_FILES['pdf_report_1'];
+            if ($pdf_report_1['size'] > $maxSize || $pdf_report_1['type'] !== 'application/pdf') {
+                throw new Exception("Invalid file. Please select a PDF file with a maximum size of 5MB for Report 1.");
+            }
+            $fileName1 = $cnic . '_' . basename($pdf_report_1['name']);
+            $filePath1 = $uploadDir . $fileName1;
+            if (!move_uploaded_file($pdf_report_1['tmp_name'], $filePath1)) {
+                throw new Exception("Failed to move uploaded file for Report 1.");
             }
 
-            // Prepare SQL statement to insert the report into the database
-            $sql = "INSERT INTO reports (filename, uploader_id, cnic_no, patient_name, file_path) VALUES (?, ?, ?, ?, ?)";
+            // Process the second file upload
+            $pdf_report_2 = $_FILES['pdf_report_2'];
+            if ($pdf_report_2['size'] > $maxSize || $pdf_report_2['type'] !== 'application/pdf') {
+                throw new Exception("Invalid file. Please select a PDF file with a maximum size of 5MB for Report 2.");
+            }
+            $fileName2 = $cnic . '_' . basename($pdf_report_2['name']);
+            $filePath2 = $uploadDir . $fileName2;
+            if (!move_uploaded_file($pdf_report_2['tmp_name'], $filePath2)) {
+                throw new Exception("Failed to move uploaded file for Report 2.");
+            }
+
+            // Prepare SQL statement to insert the reports into the database
+            $sql = "INSERT INTO reports (filename, uploader_id, cnic_no, patient_name, file_path_1, file_path_2) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($sql);
             if (!$stmt) {
                 throw new Exception("Failed to prepare statement.");
             }
 
             // Bind parameters and execute the statement
-            $stmt->bind_param("sisss", $fileName, $uploader_id, $cnic, $patient_name, $filePath);
+            $stmt->bind_param("sissss", $cnic, $uploader_id, $cnic, $patient_name, $filePath1, $filePath2);
             if (!$stmt->execute()) {
                 throw new Exception("Failed to execute statement.");
             }
@@ -57,10 +74,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
             $conn->commit(); // Commit the transaction
 
             // Set success message
-            $_SESSION['message'][] = array("type" => "success", "content" => "Report uploaded successfully!");
+            $_SESSION['message'][] = array("type" => "success", "content" => "Reports uploaded successfully!");
 
             // Redirect to success page
-            header("Location: upload-report.php");
+            header("Location: upload-doc.php");
             exit();
         } else {
             throw new Exception("All form fields are required.");
@@ -84,8 +101,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
 }
 ?>
 
+
 <head>
-    <title>Upload Report | The National Way Medical Lab</title>
+    <title>Upload Report | Maple Leaf Food</title>
     <?php include 'layouts/title-meta.php'; ?>
     <?php include 'layouts/head-css.php'; ?>
 </head>
@@ -106,12 +124,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                             <div class="page-title-box">
                                 <div class="page-title-right">
                                     <ol class="breadcrumb m-0">
-                                        <li class="breadcrumb-item"><a href="javascript: void(0);">The National Medical Lab</a></li>
-                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Reports</a></li>
-                                        <li class="breadcrumb-item active">Upload Report</li>
+                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Maple Leafs Food</a></li>
+                                        <li class="breadcrumb-item"><a href="javascript: void(0);">Documents</a></li>
+                                        <li class="breadcrumb-item active">Upload Document</li>
                                     </ol>
                                 </div>
-                                <h4 class="page-title">Upload Report </h4>
+                                <h4 class="page-title">Upload Document </h4>
                             </div>
                         </div>
                     </div>
@@ -122,20 +140,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                                     <form class="needs-validation" novalidate style=" margin-left: 0; margin-right: 0;" action="<?php echo $_SERVER['PHP_SELF']; ?>" method="post" enctype="multipart/form-data">
 
                                         <div class="mb-3 col-lg-6">
-                                            <label class="form-label" for="validationCustom01">Full Name of Patient</label>
-                                            <input type="text" class="form-control" name="patient_name" id="validationCustom01" placeholder="Enter Full Name of Patient" required>
+                                            <label class="form-label" for="validationCustom01">Full Name of Person</label>
+                                            <input type="text" class="form-control" name="patient_name" id="validationCustom01" placeholder="Enter Full Name of Person" required>
                                             <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter the full name of the patient.</div>
+                                            <div class="invalid-feedback">Please enter the full name.</div>
                                         </div>
                                         <div class="mb-3 col-lg-6">
-                                            <label class="form-label" for="validationCustom02">CNIC # </label>
-                                            <input type="number" class="form-control" name="cnic" id="validationCustom02" placeholder="12345-1234567-1" required>
+                                            <label class="form-label" for="validationCustom02">CNIC# / Passport# </label>
+                                            <input type="number" class="form-control" name="cnic" id="validationCustom02" placeholder="1234512345671" required>
                                             <div class="valid-feedback">Looks good!</div>
-                                            <div class="invalid-feedback">Please enter the CNIC # of the patient.</div>
+                                            <div class="invalid-feedback">Please enter the CNIC Number OR Passport Number.</div>
                                         </div>
                                         <div class="mb-3 col-lg-6">
-                                            <label for="example-fileinput" class="form-label">Select PDF Report (MAX Size &lt;= 5MB)</label>
-                                            <input type="file" name="pdf_report" id="pdf_report" class="form-control" accept=".pdf" required>
+                                            <label for="example-fileinput" class="form-label">Select PDF Document (MAX Size &lt;= 5MB)</label>
+                                            <input type="file" name="pdf_report_1" id="pdf_report" class="form-control" accept=".pdf" required>
+                                            <div class="valid-feedback">Looks good!</div>
+                                            <div class="invalid-feedback">Please select a PDF file with a maximum size of 5MB.</div>
+                                        </div>
+                                        <div class="mb-3 col-lg-6">
+                                            <label for="example-fileinput" class="form-label">Select PDF Document (MAX Size &lt;= 5MB)</label>
+                                            <input type="file" name="pdf_report_2" id="pdf_report" class="form-control" accept=".pdf" required>
                                             <div class="valid-feedback">Looks good!</div>
                                             <div class="invalid-feedback">Please select a PDF file with a maximum size of 5MB.</div>
                                         </div>
@@ -150,7 +174,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-body">
-                                    <h4 class="header-title">Uploaded Reports</h4>
+                                    <h4 class="header-title">Uploaded Document</h4>
                                     <p class="text-muted fs-14">
 
                                     </p>
@@ -158,9 +182,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                                     <table id="scroll-horizontal-datatable" class="table table-striped w-100 nowrap">
                                         <thead>
                                             <tr>
-                                                <th>Report ID</th>
-                                                <th>Patient Name</th>
-                                                <th>Patient's CNIC #</th>
+                                                <th>Doc ID</th>
+                                                <th>Person Name</th>
+                                                <th>CNIC #</th>
                                                 <th>Uploaded Date</th>
                                                 <th>File Name</th>
                                                 <th>Uploaded By</th>
@@ -198,14 +222,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['btnUploadReport'])) {
                                                         <td><?php echo htmlspecialchars($report['filename']); ?></td>
                                                         <td><?php echo htmlspecialchars($report['uploader_id']); ?></td>
                                                         <td>
-                                                            <a href="edit-report.php?report_id=<?php echo htmlspecialchars($report['id']); ?>" class="btn btn-warning btn-sm">Edit</a>
-                                                            <a href="delete-report.php?report_id=<?php echo htmlspecialchars($report['id']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this report?');">Delete</a>
+                                                            <a href="edit-doc.php?doc_id=<?php echo htmlspecialchars($report['id']); ?>" class="btn btn-warning btn-sm">Edit</a>
+                                                            <a href="delete-doc.php?doc_id=<?php echo htmlspecialchars($report['id']); ?>" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this report?');">Delete</a>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
                                             <?php else : ?>
                                                 <tr>
-                                                    <td colspan="7" class="text-center">No reports found.</td>
+                                                    <td colspan="7" class="text-center">No Documents found.</td>
                                                 </tr>
                                             <?php endif; ?>
                                         </tbody>

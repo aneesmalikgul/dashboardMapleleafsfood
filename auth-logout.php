@@ -13,7 +13,7 @@ session_destroy();
 <?php include 'layouts/main.php'; ?>
 
 <head>
-    <title>Logout | The City Care Way Medical Lab</title>
+    <title>Logout | Maple Leafs Food</title>
     <?php include 'layouts/title-meta.php'; ?>
 
     <?php include 'layouts/head-css.php'; ?>
@@ -80,7 +80,7 @@ session_destroy();
         <span class="bg-body">
             <script>
                 document.write(new Date().getFullYear())
-            </script> © Care Way Medical Lab - Powered By <a href="https://themillionairesoft.com/">The Millionaire Soft.<a>
+            </script> © Maple Leafs Food
         </span>
     </footer>
     <?php include 'layouts/footer-scripts.php'; ?>

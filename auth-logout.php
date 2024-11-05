@@ -32,7 +32,7 @@ session_destroy();
                         <!-- Logo -->
                         <div class="card-header py-4 text-center bg-white">
                             <a href="index.php">
-                                <span><img src="assets/images/national_medical_lab_logo_wb.png" alt="logo" height="70"></span>
+                                <span><img src="assets/images/logo.svg" alt="logo" height="70"></span>
                                 <!-- <h3>Care Way Medical Lab</h3> -->
                             </a>
 

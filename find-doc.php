@@ -138,7 +138,7 @@
                     <div class="form-group">
                         <div class="mb-3">
                             <label class="form-label">CNIC # OR Passport #</label>
-                            <input type="text" class="form-control" id="cnic" placeholder="Enter CNIC Number" required>
+                            <input type="text" class="form-control" id="cnic" placeholder="Enter CNIC OR Paasport Number" required>
                             <span class="fs-13 text-muted">e.g "xxxxxxxxxxxxx"</span>
                         </div>
                     </div>
